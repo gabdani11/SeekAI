@@ -24,6 +24,7 @@
     "langchain": "^1.4.0",
     "mongoose": "^9.5.0",
     "morgan": "^1.10.1",
-    "nodemailer": "^8.0.7"
+    "nodemailer": "^8.0.7",
+    "socket.io": "^4.8.3"
   }
 }
