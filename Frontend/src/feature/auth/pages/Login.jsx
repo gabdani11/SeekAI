@@ -1,13 +1,25 @@
-import React from 'react'
+import React, {useState} from 'react'
+import { Link, useNavigate, Navigate  } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+
 import './auth.scss'
-import { Link, useNavigate  } from 'react-router-dom';
-import { useState } from 'react';
 import {useAuth} from '../hook/useAuth.js'
+
+
 const Login = () => {
+  const navigate = useNavigate()
+
+  const {handleLogin} = useAuth()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const {handleLogin} = useAuth()
-  const navigate = useNavigate()
+ 
+  const user = useSelector(state=>state.auth.user)
+  
+  if(user)
+  {
+    return <Navigate to='/'/>
+  }
   const handleSubmit = async (e) => {
     e.preventDefault()//stop page refresh
     const payload ={
