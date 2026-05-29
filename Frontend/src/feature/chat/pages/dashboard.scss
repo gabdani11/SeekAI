@@ -1,0 +1,115 @@
+.dashboard{
+    width: 100%;
+    height: 100vh;
+    background-color: rgb(236, 236, 231);
+    display: flex;
+
+    .titleContainer {
+        padding: 1rem;
+        width: 280px;
+        border-right: 2px solid rgba(0, 0, 0, 0.12);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        h1 {
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        .titleList {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            h4 {
+                font-size: 0.95rem;
+                padding: 0.5rem;
+                border-radius: 6px;
+                background: white;
+                cursor: pointer;
+            }
+        }
+    }
+
+    .chatContainer {
+        flex: 1;
+        height: 100%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+
+        .messages {
+            padding: 1rem;
+            padding-bottom: 96px; /* leave space for prompt */
+            overflow-y: auto;
+            flex: 1;
+
+            .empty {
+                color: #666;
+            }
+
+            .message {
+                display: flex;
+                margin-bottom: 0.75rem;
+
+                &.user {
+                    justify-content: flex-end;
+
+                    .bubble {
+                        background: #007bff;
+                        color: white;
+                        border-radius: 12px 12px 0 12px;
+                    }
+                }
+
+                &.assistant {
+                    justify-content: flex-start;
+
+                    .bubble {
+                        background: #f1f1f1;
+                        color: #111;
+                        border-radius: 12px 12px 12px 0;
+                    }
+                }
+
+                .bubble {
+                    max-width: 70%;
+                    padding: 0.6rem 0.9rem;
+                }
+            }
+        }
+
+        .promptContainer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 12px 16px;
+            background: linear-gradient(transparent, rgba(255,255,255,0.95));
+            display: flex;
+            align-items: center;
+
+            input {
+                width: 100%;
+                padding: 12px 16px;
+                border-radius: 999px;
+                border: 1px solid #ddd;
+                outline: none;
+                font-size: 1rem;
+                background: white;
+
+               
+            }
+             .btn{
+                    border: 2px solid black;
+                    background-color: black;
+                    color: white;
+                    padding: 0.5rem 2rem;
+                    border-radius: 10px;
+                }
+
+        }
+    }
+}

@@ -5,13 +5,13 @@ import messageModel from '../model/message.model.js'
 
 export async function sendMessage(req,res)
 {
-    const {message, chat:chatId} = req.body
+    const {message, chatId} = req.body
     
     
     let title = null, chat = null;
 
     if(!chatId){
-        const title = await generateChatTitle(message) //generate title from mistral
+        title = await generateChatTitle(message) //generate title from mistral
         chat = await chatModel.create({ //creating chat title and user id in DB
         user: req.user.id,
         title
@@ -35,8 +35,9 @@ export async function sendMessage(req,res)
     })
 
     res.status(201).json({
-       response:response,
-       title: title
+       aiMessage:aiMessage,
+       title: title,
+       chat:chat
     })
 }
 export async function getCharts(req,res)
