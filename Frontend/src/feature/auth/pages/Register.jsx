@@ -33,7 +33,14 @@ const Register = () => {
   }
   return (
     <div className="register container">
-      <h2>Register</h2>
+      <div className="leftContainer">
+        <img src="https://cdn.cosmos.so/cd846f3f-42a1-41a6-b2c7-d7b5eac6475e?format=jpeg" alt="" />
+      </div>
+      <div className="rightContainer">
+        <div className="header">
+         <h2>Get Started Now</h2>
+         <p>Please sign up to your account</p>
+        </div>
       <form onSubmit={formHandler}>
         <input 
         type="text" 
@@ -52,7 +59,8 @@ const Register = () => {
         onChange={(e)=>setPassword(e.target.value)} />
         <button type="submit">Register</button>
       </form>
-        <p>Already have an account? <Link to="/login">Login</Link></p>
+        <p>Already have an account? <Link className="link" to="/login">Login</Link></p>
+    </div>
     </div>
   )
 }

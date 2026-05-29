@@ -40,13 +40,22 @@ const Login = () => {
   
   return (
     <div className="login container">
-      <h2>Login</h2>
+      <div className="leftContainer">
+       <img src="https://cdn.cosmos.so/cd846f3f-42a1-41a6-b2c7-d7b5eac6475e?format=jpeg" alt="" />
+      </div>
+      <div className="rightContainer">
+        <div className="header">
+         <h2>Welcome Back</h2>
+         <p>Please sign in to your account</p>
+        </div>
+      
       <form onSubmit={handleSubmit}>
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input type="password" placeholder="Password" value={password} onChange={(e)=> setPassword(e.target.value)} />
         <button type="submit">Login</button>
       </form>
-        <p>Don't have an account? <Link to="/register">Register</Link></p>
+        <p>Don't have an account? <Link className="link" to="/register">Register</Link></p>
+        </div>
     </div>
   )
 }
