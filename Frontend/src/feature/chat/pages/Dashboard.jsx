@@ -11,28 +11,31 @@ const titles = [
 
 const Dashboard = () => {
   const chat = useChat()
-  const [messages, setMessages] = useState([])
-  const [input, setInput] = useState('')
-  const inputRef = useRef(null)
+
+  const [messages, setMessages] = useState('')
+  const [chatInput, setChatInput] = useState('')
+  
+  const chats = useSelector(state=>state.chat.chats)
+  console.log(chats)
+  const currentChatId = useSelector(state=>state.chat.currentChatId)
+
 
   useEffect(() => {
     chat.initializedSocketConnection?.()
   }, [])
 
-  const handleSend = (e) => {
-    e.preventDefault()
-    if (!input.trim()) return
-    const msg = {
-      id: Date.now(),
-      text: input.trim(),
-      role: 'user',
-    }
-    setMessages((p) => [...p, msg])
-    setInput('')
-    inputRef.current?.focus()
-    // If you add socket send later: chat.sendMessage?.(msg)
-  }
+const handleSubmitMessage = (e)=>{
+  e.preventDefault()
 
+  const trimmedMessage = chatInput.trim()
+  if(!trimmedMessage)
+  {
+    return
+  }
+  chat.handleSendMessage({message: trimmedMessage, chatId: currentChatId})
+  setChatInput('')
+
+}
   return (
     <div className="dashboard">
       <div className="titleContainer">
@@ -46,23 +49,22 @@ const Dashboard = () => {
 
       <div className="chatContainer">
         <div className="messages" aria-live="polite">
-          {messages.length === 0 ? (
+          {chats[currentChatId]?.messages?.length === 0 ? (
             <div className="empty">No messages yet. Start the conversation below.</div>
           ) : (
-            messages.map((m) => (
+            chats[currentChatId]?.messages?.map((m) => (
               <div key={m.id} className={`message ${m.role}`}>
-                <div className="bubble">{m.text}</div>
+                <div className="bubble">{m.content}</div>
               </div>
             ))
           )}
         </div>
 
-        <form className="promptContainer" onSubmit={handleSend}>
+        <form className="promptContainer" onSubmit={handleSubmitMessage}>
           <input
-            ref={inputRef}
             placeholder="Type a message and press Enter"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
             aria-label="Chat input"
             autoComplete="off"
             spellCheck={false}

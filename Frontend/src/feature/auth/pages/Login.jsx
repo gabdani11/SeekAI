@@ -2,6 +2,7 @@ import React, {useState} from 'react'
 import { Link, useNavigate, Navigate  } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
+
 import './auth.scss'
 import {useAuth} from '../hook/useAuth.js'
 
@@ -56,7 +57,9 @@ const Login = () => {
       </form>
         <p>Don't have an account? <Link className="link" to="/register">Register</Link></p>
         </div>
+        
     </div>
+    
   )
 }
 

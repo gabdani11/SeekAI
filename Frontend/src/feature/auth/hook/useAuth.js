@@ -1,6 +1,7 @@
 import {useDispatch} from 'react-redux'
 import {register, login, getMe} from "../services/auth.api.js"
 import { setUser, setLoading, setError } from '../auth.slice.js'
+import { toast } from "react-toastify";
 
 export function useAuth(){
     const dispatch = useDispatch()
@@ -11,11 +12,13 @@ export function useAuth(){
             dispatch(setLoading(true)) //set loading to true
             const response = await register({email, username, password}) //calling register function
             dispatch(setUser(response.user)) //setting user data to redux
+            toast.success("Register Completed")
             return true
             
         }catch(error)
         {
             dispatch(setError(error.response?.data?.message||"Register failed"))
+            toast.error(error.response?.data?.message||"Register failed")
         }finally{
             dispatch(setLoading(false))
         }
@@ -26,11 +29,14 @@ export function useAuth(){
             dispatch(setLoading(true))
             const response = await login({email, password})
             dispatch(setUser(response.user))
+            toast.success("Login Successful")
             return true
 
         }catch(error)
         {
-            dispatch(setError(error.response?.data?.message||"Login failed"))
+            toast.error(
+                error.response?.message || "Login failed"
+            )
         }finally{
             dispatch(setLoading(false))
         }
