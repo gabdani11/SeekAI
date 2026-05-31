@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useSelector } from 'react-redux'
-import { useChat } from '../hooks/useChat'
+import {useChat} from '../hooks/useChat.js'
+import ReactMarkdown from "react-markdown";
 import './dashboard.scss'
+import Markdown from 'react-markdown';
 
 const titles = [
   'this is title',
@@ -11,19 +13,22 @@ const titles = [
 
 const Dashboard = () => {
   const chat = useChat()
-
   const [messages, setMessages] = useState('')
   const [chatInput, setChatInput] = useState('')
   
   const chats = useSelector(state=>state.chat.chats)
   console.log(chats)
   const currentChatId = useSelector(state=>state.chat.currentChatId)
+  
 
 
   useEffect(() => {
-    chat.initializedSocketConnection?.()
+    chat.initializedSocketConnection?.(),
+    chat.handleGetChats()
   }, [])
+ 
 
+//function to handle prompt submit 
 const handleSubmitMessage = (e)=>{
   e.preventDefault()
 
@@ -36,15 +41,22 @@ const handleSubmitMessage = (e)=>{
   setChatInput('')
 
 }
+const handleChatClick = (chatId) =>{
+  chat.handleGetMessages(chatId)
+}
   return (
     <div className="dashboard">
       <div className="titleContainer">
         <h1>SeekAI</h1>
         <div className="titleList">
-          {titles.map((t) => (
-            <h4 key={t}>{t}</h4>
-          ))}
-        </div>
+  {Object.values(chats).map((chat) => (
+    <h4  key={chat.id} onClick={() => handleChatClick(chat.id)}>
+      <ReactMarkdown>
+      {chat.title}
+      </ReactMarkdown>
+    </h4>
+  ))}
+</div>
       </div>
 
       <div className="chatContainer">
@@ -54,7 +66,9 @@ const handleSubmitMessage = (e)=>{
           ) : (
             chats[currentChatId]?.messages?.map((m) => (
               <div key={m.id} className={`message ${m.role}`}>
-                <div className="bubble">{m.content}</div>
+                <div className="bubble">
+                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                </div>
               </div>
             ))
           )}
@@ -72,8 +86,9 @@ const handleSubmitMessage = (e)=>{
           <button className='btn'>Send</button>
         </form>
       </div>
-    </div>
+    </div>  
   )
 }
 
-export default Dashboard
+
+export default Dashboard;

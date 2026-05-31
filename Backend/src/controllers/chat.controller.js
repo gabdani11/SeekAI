@@ -40,16 +40,17 @@ export async function sendMessage(req,res)
        chat:chat
     })
 }
-export async function getCharts(req,res)
+export async function getChats(req,res)
 {
     const user = req.user
     
-    const charts = await chatModel.find({
+    const chats = await chatModel.find({
         user:user.id
     })
     res.status(200).json({
         message:"Chat received successfully",
-        charts
+        success:true,
+        chats
     })
 }
 export async function getMessages(req,res)
