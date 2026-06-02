@@ -1,6 +1,8 @@
 import {ChatGoogleGenerativeAI} from '@langchain/google-genai'
 import {ChatMistralAI} from '@langchain/mistralai'
-import {HumanMessage, SystemMessage, AIMessage} from 'langchain'
+import {HumanMessage, SystemMessage, AIMessage, createAgent, tool} from 'langchain'
+import getDataFromInternet from './internet.service.js'
+import * as z from 'zod'// Define a Zod schema for the tool input
 
 const model = new ChatGoogleGenerativeAI({
     model:"gemini-2.5-flash",
@@ -11,10 +13,33 @@ const model2 = new ChatMistralAI({
     apiKey:process.env.MISTRALAI_API_KEY
 })
 
+const searchInternetTool = tool(
+    getDataFromInternet,
+    {
+        name:"searchInternet",
+        description:"use this tool to search for latest information on the internet.",
+        schema: z.object({
+            query: z.string().describe("The search query to fetch information from the internet.")
+        })
+    }
+
+)
+
+
+const agent = createAgent({
+    model:model, 
+    tools:[searchInternetTool],
+ })
+
 
 export async function generateResponse(message)
 {
-    const response = await model.invoke(message.map(msg=>{
+    const response = await agent.invoke({messages:[
+
+        new SystemMessage(`
+            You are a helpful assistant that provides information and answers questions based on the user's message.
+             If you need to search for information with latest updates on the internet to provide a better response, use the "searchInternet" tool.`),
+        ...(message.map(msg=>{
         if(msg.role == 'user')
         {
            return new HumanMessage(msg.content)
@@ -22,8 +47,10 @@ export async function generateResponse(message)
         {
            return new AIMessage(msg.content)
         }
-    }))
-    return response.text
+    })
+)]
+})
+return response.messages[response.messages.length-1].text
 }
 export async function generateChatTitle(message)
 {

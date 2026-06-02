@@ -16,7 +16,6 @@ const Dashboard = () => {
   const [chatInput, setChatInput] = useState('')
   
   const chats = useSelector(state=>state.chat.chats)
-  console.log(chats)
   const currentChatId = useSelector(state=>state.chat.currentChatId)
   
 
