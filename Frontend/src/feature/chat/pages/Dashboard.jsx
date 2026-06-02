@@ -4,14 +4,13 @@ import {useChat} from '../hooks/useChat.js'
 import ReactMarkdown from "react-markdown";
 import './dashboard.scss'
 import Markdown from 'react-markdown';
+import { setCurrentChatId } from '../chat.slice.js';
+import { useDispatch } from 'react-redux';
 
-const titles = [
-  'this is title',
-  'this is titl2',
-  'this is title3',
-]
+
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
   const chat = useChat()
   const [messages, setMessages] = useState('')
   const [chatInput, setChatInput] = useState('')
@@ -48,6 +47,11 @@ const handleChatClick = (chatId) =>{
     <div className="dashboard">
       <div className="titleContainer">
         <h1>SeekAI</h1>
+        <div className="createNewChat">
+          <button onClick={()=>dispatch(setCurrentChatId(null))} className='createNewChatBtn'>
+            Create New Chat
+          </button>
+        </div>
         <div className="titleList">
   {Object.values(chats).map((chat) => (
     <h4  key={chat.id} onClick={() => handleChatClick(chat.id)}>
@@ -55,7 +59,7 @@ const handleChatClick = (chatId) =>{
       {chat.title}
       </ReactMarkdown>
     </h4>
-  ))}
+  )).reverse()}
 </div>
       </div>
 

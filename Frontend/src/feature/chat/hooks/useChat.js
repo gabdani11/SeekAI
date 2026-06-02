@@ -1,31 +1,48 @@
 import { initializedSocketConnection } from "../services/chat.socket";
 import { sendMessage, getChats, getMessages, deleteChat } from "../services/chat.api";
-import { setChats, setCurrentChatId, setError, setLoading, createNewChat, createNewMessage, updateChatMessages } from "../chat.slice";
-import { useDispatch } from "react-redux";
+import { setChats, setCurrentChatId, setError, setLoading, createNewChat, createNewMessage, updateChatMessages, setChatMessages, updateTempId } from "../chat.slice";
+import { useDispatch, useSelector } from "react-redux";
 export const useChat = () =>{
 
     const dispatch = useDispatch()
+    const currentChatId = useSelector(state=>state.chat.currentChatId)
 
 
-    async function handleSendMessage({message, chatId})
+    async function handleSendMessage({message, chatId=currentChatId})
     {
     try{
+        const tempChatId = `temp-${Date.now()}`
         dispatch(setLoading(true))
-        const response= await sendMessage({message, chatId})
-        const {aiMessage, chat} = response
-        dispatch(createNewChat({chatId: chat._id, title: chat.title}))
-        
-        dispatch(createNewMessage({chatId: chat._id, content: message, role: 'user'}))
-        dispatch(createNewMessage({chatId: chat._id, content: aiMessage.content, role: aiMessage.role}))
-        dispatch(setCurrentChatId(chat._id))
-        }catch(error)
+        if(chatId)
         {
-            console.log(error)
-        }finally
+        dispatch(updateChatMessages({ chat: chatId, content: [{content: message, role:"user"}]}))
+        }else
         {
-            dispatch(setLoading(false))
+            dispatch(createNewChat({chat: tempChatId, title: 'Loading...', messages: [{content: message, role:"user"}]}))
+            dispatch(setCurrentChatId(tempChatId))
         }
+        const response= await sendMessage({message, chatId})
+        const {aiMessage, title, chat} = response
+        dispatch(setCurrentChatId(aiMessage.chat))
+        
+        if(title == null)
+        {   
+            dispatch(updateChatMessages({ chat: aiMessage.chat, content: [{content: aiMessage.content, role:"ai"}]}))
+            
+        }
+        else{
+            
+            dispatch(updateTempId({tempId: tempChatId, content:[{content: aiMessage.content, role:"ai"}], chat}))
+            
+        }
+
+    }catch(error)
+    {
+        dispatch(setError(error.message))
+    }finally{
+        dispatch(setLoading(false))
     }
+}
 
 
     //bring all the chats of the user
@@ -51,7 +68,7 @@ export const useChat = () =>{
         const data = await getMessages(chatId)
         const {messages} = data
         dispatch(setCurrentChatId(chatId))
-        dispatch(updateChatMessages({chatId, messages}))
+        dispatch(setChatMessages({chatId, messages}))
         dispatch(setLoading(false))
     }
 

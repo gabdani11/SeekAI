@@ -11,19 +11,38 @@ const chatSlice = createSlice({
     },
     reducers:{
          createNewChat: (state, action) => {
-            const { chatId, title } = action.payload
-            state.chats[ chatId ] = {
-                id: chatId,
-                title,
-                messages: [],
-                lastUpdated: new Date().toISOString(),
+            const { chat, title, messages } = action.payload
+            state.chats[ chat ] = {
+                id: chat,
+                title: title,
+                messages: messages,
+                lastUpdated: Date.now() ,
             }
+        },
+        updateTempId:(state, action)=>{
+                 const {tempId, content, chat} = action.payload
+                 state.chats[chat._id] = {
+                 ...state.chats[tempId],
+                 id: chat._id,
+                 title: chat.title,
+                 messages:[
+                     ...state.chats[tempId].messages,
+                     ...content
+                 ],
+                 lastUpdated: chat.updatedAt
+             }
+
+             delete state.chats[tempId]
         },
         createNewMessage:(state, action)=>{
             const {chatId,content, role} = action.payload
             state.chats[chatId].messages.push({content, role})
         },
         updateChatMessages:(state, action)=>{
+            const {chat, content} = action.payload
+            state.chats[chat].messages = [...state.chats[chat].messages, ...content]
+        },
+        setChatMessages:(state, action)=>{
             const {chatId, messages} = action.payload
             state.chats[chatId].messages = messages
         },
@@ -43,5 +62,5 @@ const chatSlice = createSlice({
         }
     }
 })
-export const {setChats, setCurrentChatId, setLoading, setError, createNewChat, createNewMessage, updateChatMessages} = chatSlice.actions
+export const {setChats, setCurrentChatId, setLoading, setError, createNewChat, createNewMessage, updateChatMessages, setChatMessages, updateTempId} = chatSlice.actions
 export default chatSlice.reducer
