@@ -15,6 +15,8 @@
         gap: 1rem;
         scrollbar-width: thin;
         scrollbar-color: #ccc #f1f1f1;
+        background-color: var(--secondary-color);
+        color: var(--primary-color);
 
         h1 {
             margin-bottom: 0.5rem;
@@ -22,24 +24,91 @@
         }
         .createNewChat{
             width: 100%;
+            margin-bottom: 2rem;
+            transition: all 0.2s ease;
             button{
                 width: 100%;
-                padding: 0.5rem 1rem;
+                padding: 0.7rem 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                color: var(--accent-color);
+                background-color: var(--primary-color);
+                border: none;
+                cursor: pointer;
             }
+        }
+        .createNewChat:active{
+            scale: 0.98;
         }
 
         .titleList {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
+            overflow-y: auto;
+            scrollbar-width:none;
+            scrollbar-color: var(--primary-color) transparent;
+            
 
             h4 {
                 font-size: 0.95rem;
-                padding: 0.5rem;
-                border-radius: 6px;
                 cursor: pointer;
+                font-weight: 500;
+                font-style: normal;
+            }
+            
+        }
+        .titleList:hover{
+            scrollbar-width: thin;
+        }
+        .userDetail{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+             margin-top:auto;
+             padding:0.5rem;
+             background-color: var(--primary-color);
+             color: var(--accent-color);
+             border-radius: 999px;
+
+             .name{
+                font-size:0.95rem;
+                font-weight:500;
+             }
+            .profileImg{
+                width:40px;
+                display:flex;
+                gap:0.5rem;
+                align-items:center;
+                img{
+                    width:100%;
+                    border-radius:50%;
+                }
             }
         }
+        .preferencesPanel{
+                display: flex;
+                gap: 0.5rem;
+                flex-direction: column;
+
+                .box{
+                    display:flex;
+                    align-items:center;
+                    gap:0.5rem;
+                    cursor:pointer;
+                }
+            }
+        .conversationTitle{
+                display:flex;
+                align-items:center;
+                gap:0.5rem;
+                
+                h6{
+                    font-size:1rem;
+                    font-weight:700;
+                }
+            }
     }
     
 
@@ -60,7 +129,16 @@
             flex: 1;
 
             .empty {
-                color: #666;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: var(--accent-color);
+                h4{
+                    font-size: 4rem;
+                    
+                }
             }
 
             .message {
@@ -116,7 +194,7 @@
                     border: 2px solid black;
                     background-color: var(--primary-color);
                     color: var(--accent-color);
-                    margin:0rem 1rem;   
+                    margin:0.2rem 1rem;   
                     padding: 0.5rem;
                     border-radius: 999px;
                     display: flex;
