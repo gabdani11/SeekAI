@@ -1,7 +1,7 @@
 .dashboard{
     width: 100%;
     height: 100vh;
-    background-color: rgb(236, 236, 231);
+    background-color: var(--primary-color);
     display: flex;
 
     .titleContainer {
@@ -37,11 +37,11 @@
                 font-size: 0.95rem;
                 padding: 0.5rem;
                 border-radius: 6px;
-                background: white;
                 cursor: pointer;
             }
         }
     }
+    
 
     .chatContainer {
         flex: 1;
@@ -49,6 +49,9 @@
         position: relative;
         display: flex;
         flex-direction: column;
+        color: var(--accent-color);
+
+        
 
         .messages {
             padding: 1rem;
@@ -68,8 +71,8 @@
                     justify-content: flex-end;
 
                     .bubble {
-                        background: #007bff;
-                        color: white;
+                        background: var(--secondary-color);
+                        color: var(--primary-color);
                         border-radius: 12px 12px 0 12px;
                     }
                 }
@@ -77,11 +80,6 @@
                 &.assistant {
                     justify-content: flex-start;
 
-                    .bubble {
-                        background: #f1f1f1;
-                        color: #111;
-                        border-radius: 12px 12px 12px 0;
-                    }
                 }
 
                 .bubble {
@@ -96,28 +94,36 @@
             left: 0;
             right: 0;
             bottom: 0;
-            padding: 12px 16px;
-            background: linear-gradient(transparent, rgba(255,255,255,0.95));
+            background-color: var(--secondary-color);
+            border-radius: 60px;
+            margin: 12px 16px;
             display: flex;
+            border: 1px solid #ddd;
             align-items: center;
 
             input {
                 width: 100%;
                 padding: 12px 16px;
                 border-radius: 999px;
-                border: 1px solid #ddd;
                 outline: none;
+                border: none;
                 font-size: 1rem;
-                background: white;
+                background-color: transparent;
 
                
             }
              .btn{
                     border: 2px solid black;
-                    background-color: black;
-                    color: white;
-                    padding: 0.5rem 2rem;
-                    border-radius: 10px;
+                    background-color: var(--primary-color);
+                    color: var(--accent-color);
+                    margin:0rem 1rem;   
+                    padding: 0.5rem;
+                    border-radius: 999px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                
                 }
 
         }

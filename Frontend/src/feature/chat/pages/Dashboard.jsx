@@ -6,6 +6,8 @@ import './dashboard.scss'
 import Markdown from 'react-markdown';
 import { setCurrentChatId } from '../chat.slice.js';
 import { useDispatch } from 'react-redux';
+import { RiSendPlaneFill } from "@remixicon/react";
+
 
 
 
@@ -86,7 +88,10 @@ const handleChatClick = (chatId) =>{
             autoComplete="off"
             spellCheck={false}
           />
-          <button className='btn'>Send</button>
+          <button className='btn'>
+           <RiSendPlaneFill
+           size={20} />
+          </button>
         </form>
       </div>
     </div>  
