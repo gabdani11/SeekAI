@@ -5,6 +5,13 @@
   font-display: swap;
   font-style: normal;
 }
+:root{
+   --primary-color: #1C1C1C;
+  --secondary-color: #EDEDED;
+  --accent-color: #FFFFFF;
+  --main-font-size: 16px;
+  --padding-standard: 12px;
+}
 * , *::before, *::after { box-sizing: border-box;
 margin: 0;
 padding: 0; }
@@ -12,4 +19,21 @@ html, body {
   height: 100%;
  width: 100%;
   font-family: CabinetGrotesk-Variable, sans-serif, system-ui;
+}
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #444, #222);
+  border-radius: 10px;
+  transition: background 0.4s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
