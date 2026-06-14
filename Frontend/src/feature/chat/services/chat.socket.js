@@ -1,15 +1,23 @@
-import {io} from 'socket.io-client'
+import { io } from 'socket.io-client'
 
-export const initializedSocketConnection = (token)=>{
+let socket = null
 
-const socket = io('http://localhost:3000',{ //connecting to backend 
-    withCredentials:true,
-})
+export const initializeSocketConnection = () => {
+    if (socket) return socket
 
-socket.on('connect',()=>{
-    console.log("Connected to Socket.IO server") //creating connection instance
-})
- 
+    socket = io('http://localhost:3000', {
+        withCredentials: true
+    })
 
+    socket.on('connect', () => {
+        console.log("Connected to Socket.IO server:", socket.id)
+    })
 
+    socket.on('disconnect', () => {
+        console.log("Disconnected from Socket.IO server")
+    })
+
+    return socket
 }
+
+export const getSocket = () => socket

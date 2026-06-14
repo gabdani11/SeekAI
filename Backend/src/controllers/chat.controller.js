@@ -3,42 +3,52 @@ import chatModel from '../model/chat.model.js'
 import messageModel from '../model/message.model.js'
 
 
-export async function sendMessage(req,res)
-{
-    const {message, chatId} = req.body
-    
-    
-    let title = null, chat = null;
+export async function sendMessage(req, res) {
+    try {
+        const { message, chatId } = req.body
+        let title = null, chat = null
 
-    if(!chatId){
-        title = await generateChatTitle(message) //generate title from mistral
-        chat = await chatModel.create({ //creating chat title and user id in DB
-        user: req.user.id,
-        title
-    })
-}
-    
-    const userMessage = await messageModel.create({ //creating content, chatid of user in DB
-        chat:chatId || chat._id,
-        content: message,
-        role:'user'
+        if (!chatId) {
+            title = await generateChatTitle(message)
+            chat = await chatModel.create({
+                user: req.user.id,
+                title
+            })
+        }
 
-    })
-    const messages = await messageModel.find({chat:chatId || chat._id}) //find all message with similar chatid
-    const response = await generateResponse(messages) //generate content of question
+        const finalChatId = chatId || chat._id
 
-    const aiMessage = await messageModel.create({ //creating content , chatid of ai in DB
-        chat:chatId || chat._id,
-        content: response,
-        role:'ai'
+        await messageModel.create({
+            chat: finalChatId,
+            content: message,
+            role: 'user'
+        })
 
-    })
+        // respond immediately so frontend isn't blocked while streaming happens
+        res.status(202).json({
+            title,
+            chat,
+            chatId: finalChatId
+        })
 
-    res.status(201).json({
-       aiMessage:aiMessage,
-       title: title,
-       chat:chat
-    })
+        const messages = await messageModel.find({ chat: finalChatId })
+
+        // stream response over socket
+        const response = await generateResponse(messages, finalChatId)
+
+        // save after streaming completes
+        await messageModel.create({
+            chat: finalChatId,
+            content: response,
+            role: 'ai'
+        })
+
+    } catch (err) {
+        console.error(err)
+        if (!res.headersSent) {
+            res.status(500).json({ error: "Failed to generate response" })
+        }
+    }
 }
 export async function getChats(req,res)
 {
