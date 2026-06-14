@@ -3,6 +3,9 @@ import {ChatMistralAI} from '@langchain/mistralai'
 import {HumanMessage, SystemMessage, AIMessage, createAgent, tool} from 'langchain'
 import getDataFromInternet from './internet.service.js'
 import * as z from 'zod'// Define a Zod schema for the tool input
+import {getIO} from '../sockets/server.socket.js'
+
+
 
 const model = new ChatGoogleGenerativeAI({
     model:"gemini-2.5-flash",
@@ -32,25 +35,37 @@ const agent = createAgent({
  })
 
 
-export async function generateResponse(message)
-{
-    const response = await agent.invoke({messages:[
+export async function generateResponse(message, chatId) {
+    const io = getIO()
 
-        new SystemMessage(`
-            You are a helpful assistant that provides information and answers questions based on the user's message.
-             If you need to search for information with latest updates on the internet to provide a better response, use the "searchInternet" tool.`),
-        ...(message.map(msg=>{
-        if(msg.role == 'user')
+    const response = await agent.stream(
         {
-           return new HumanMessage(msg.content)
-        }else if(msg.role == 'ai')
-        {
-           return new AIMessage(msg.content)
+            messages: [
+                new SystemMessage(`
+                    You are a helpful assistant that provides information and answers questions based on the user's message.
+                    If you need to search for information with latest updates on the internet to provide a better response, use the "searchInternet" tool.`),
+                ...message
+                    .map(msg => {
+                        if (msg.role === 'user') return new HumanMessage(msg.content)
+                        if (msg.role === 'ai') return new AIMessage(msg.content)
+                    })
+                    .filter(Boolean)
+            ]
+        },
+        { streamMode: "messages" }
+    )
+
+    let finalResponse = ''
+    for await (const [chunk, metadata] of response) {
+        const text = chunk.content
+        if (typeof text === 'string' && text.length > 0) {
+            finalResponse += text
+            io.emit("aiResponseChunk", { chatId, text })
         }
-    })
-)]
-})
-return response.messages[response.messages.length-1].text
+    }
+    io.emit("aiResponseComplete", { chatId, fullText: finalResponse })
+
+    return finalResponse
 }
 export async function generateChatTitle(message)
 {
