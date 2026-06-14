@@ -38,32 +38,42 @@ const agent = createAgent({
 export async function generateResponse(message, chatId) {
     const io = getIO()
 
-    const response = await agent.stream(
-        {
-            messages: [
-                new SystemMessage(`
-                    You are a helpful assistant that provides information and answers questions based on the user's message.
-                    If you need to search for information with latest updates on the internet to provide a better response, use the "searchInternet" tool.`),
-                ...message
-                    .map(msg => {
-                        if (msg.role === 'user') return new HumanMessage(msg.content)
-                        if (msg.role === 'ai') return new AIMessage(msg.content)
-                    })
-                    .filter(Boolean)
-            ]
-        },
-        { streamMode: "messages" }
-    )
-
     let finalResponse = ''
-    for await (const [chunk, metadata] of response) {
-        const text = chunk.content
-        if (typeof text === 'string' && text.length > 0) {
-            finalResponse += text
-            io.emit("aiResponseChunk", { chatId, text })
+
+    try {
+        const stream = await agent.stream(
+            {
+                messages: [
+                    new SystemMessage(`
+                        You are a helpful assistant that provides information and answers questions based on the user's message.
+                        If you need to search for information with latest updates on the internet to provide a better response, use the "searchInternet" tool.`),
+                    ...message
+                        .map(msg => {
+                            if (msg.role === 'user') return new HumanMessage(msg.content)
+                            if (msg.role === 'ai') return new AIMessage(msg.content)
+                        })
+                        .filter(Boolean)
+                ]
+            },
+            { streamMode: "messages" }
+        )
+
+        for await (const [chunk, metadata] of stream) {
+            if (chunk.constructor.name !== 'AIMessageChunk') continue
+
+            const text = chunk.content
+            if (typeof text === 'string' && text.length > 0) {
+                finalResponse += text
+                io.to(chatId.toString()).emit("aiResponseChunk", { chatId, text })
+            }
         }
+    } catch (err) {
+        console.error("Stream error:", err)
+        io.to(chatId.toString()).emit("aiResponseError", { chatId, error: "Failed to generate response" })
+        throw err
     }
-    io.emit("aiResponseComplete", { chatId, fullText: finalResponse })
+
+    io.to(chatId.toString()).emit("aiResponseComplete", { chatId, fullText: finalResponse })
 
     return finalResponse
 }
