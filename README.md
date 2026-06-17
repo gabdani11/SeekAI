@@ -1,55 +1,61 @@
 # SeekAI 🔍🤖
 
-An intelligent AI-powered search and chat application that combines real-time web search capabilities with advanced language models to provide accurate, context-aware responses.
+An intelligent AI-powered search and chat application that combines real-time web search, document-grounded answers (RAG), and streaming chat to provide accurate, context-aware responses.
 
 ## Overview
 
-SeekAI is a full-stack application designed to deliver AI-powered conversations with the ability to search the internet in real-time. It leverages multiple AI models (Google Genai and Mistral AI) through LangChain, integrates Tavily for web search, and provides a modern, responsive user interface.
+SeekAI is a full-stack application built around a **tool-using AI agent**. Instead of a single model call, every message is handled by a LangChain agent that can decide, on its own, whether to answer directly, search the live web (via Tavily), or pull facts from PDFs you've uploaded (via a Pinecone-backed RAG pipeline). Responses are streamed token-by-token to the browser over Socket.IO so replies appear as they're generated rather than all at once.
 
 ## Features
 
-✨ **AI-Powered Chat**
-- Real-time conversations with advanced language models
-- Support for multiple AI models (Google Genai, Mistral AI)
-- Context-aware responses with conversation history
+✨ **Agentic AI Chat**
+- Conversational agent powered by Google Gemini (`gemini-2.5-flash`) via LangChain's `createAgent`
+- The agent autonomously chooses between answering from its own knowledge, searching the internet, or querying your uploaded documents
+- Conversation history is persisted and replayed back into the agent for context
+- Mistral (`mistral-small-latest`) generates a short title for each new chat
 
-🔍 **Web Search Integration**
-- Real-time internet search capabilities via Tavily
-- Augmented responses with current web information
-- Seamless integration of search results into AI responses
+🔍 **Live Web Search Tool**
+- A `searchInternet` tool backed by Tavily lets the agent pull current information from the internet when it decides a question needs it
+- Search depth and result count are tuned for speed and context size
+
+📄 **PDF / RAG Tool**
+- Upload a PDF from the chat UI; the backend extracts its text (`pdf-parse`), splits it into chunks, embeds each chunk with Mistral's `mistral-embed` model, and stores the vectors in Pinecone
+- A `queryRAG` tool lets the agent retrieve the most relevant chunks to ground its answer in your documents
+
+💬 **Real-time Streaming Chat**
+- Socket.IO streams the agent's response chunk-by-chunk to the client as it's generated
+- The client joins a per-chat "room" so multiple chats can stream independently
+- Final message and any errors are also broadcast as discrete events
 
 👤 **User Authentication**
-- Secure user registration and login
-- JWT-based authentication
-- Password encryption with bcrypt
+- Registration and login with hashed passwords (bcrypt)
+- Email verification required before login is allowed
+- JWT issued on login and stored in a cookie; protected routes are guarded by cookie-based auth middleware
 
-💬 **Real-time Communication**
-- WebSocket support for live chat updates
-- Instant message delivery and notifications
-- Socket.io integration for real-time features
-
-📧 **Email Notifications**
-- Email verification and account notifications
-- Automated email service with Nodemailer
+📧 **Email Verification**
+- Verification emails are sent through Gmail using OAuth2 (via `googleapis` + `nodemailer`), not raw SMTP credentials
 
 🎨 **Modern UI/UX**
-- React-based responsive frontend
-- Redux state management
-- Markdown support for formatted responses
-- Toast notifications for user feedback
+- React-based responsive frontend with Redux Toolkit for state
+- Markdown rendering for AI responses
+- Toast notifications for auth/chat feedback
+- Icon set via `@remixicon/react`
 
 ## Tech Stack
 
 ### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
+- **Runtime**: Node.js (ESM)
+- **Framework**: Express 5
 - **Database**: MongoDB with Mongoose ODM
-- **Real-time**: Socket.io
-- **Authentication**: JWT, Bcrypt
-- **AI/ML**: LangChain, Google Genai, Mistral AI
-- **Search**: Tavily Core API
-- **Email**: Nodemailer
-- **Validation**: Express Validator, Zod
+- **AI Orchestration**: LangChain (`createAgent`, tool calling) with Google Gemini and Mistral
+- **Vector Store**: Pinecone (for RAG)
+- **Web Search**: Tavily Core API
+- **PDF Parsing**: pdf-parse
+- **File Uploads**: Multer (in-memory storage)
+- **Real-time**: Socket.IO
+- **Authentication**: JWT (cookie-based), Bcrypt
+- **Email**: Nodemailer over Gmail OAuth2 (`googleapis`)
+- **Validation**: Express Validator, Zod (for tool schemas)
 - **Environment**: dotenv
 
 ### Frontend
@@ -58,8 +64,8 @@ SeekAI is a full-stack application designed to deliver AI-powered conversations 
 - **State Management**: Redux Toolkit
 - **Routing**: React Router v7
 - **HTTP Client**: Axios
-- **Real-time**: Socket.io Client
-- **UI Enhancements**: React Markdown, React Toastify
+- **Real-time**: Socket.IO Client
+- **UI**: React Markdown, React Toastify, `@remixicon/react`
 - **Styling**: SASS
 - **Linting**: ESLint
 
@@ -67,13 +73,16 @@ SeekAI is a full-stack application designed to deliver AI-powered conversations 
 
 ### Prerequisites
 
-- Node.js (v16 or higher)
-- npm or yarn
-- MongoDB instance (local or cloud)
-- API keys for:
-  - Google Genai
+- Node.js (v18+ recommended, since the backend uses ESM and recent LangChain packages)
+- npm
+- A MongoDB instance (local or cloud)
+- A Pinecone account with an index named `seekai`
+- API keys / credentials for:
+  - Google Gemini
   - Mistral AI
   - Tavily
+  - Pinecone
+  - A Google Cloud OAuth2 client (Gmail API) for sending verification emails
 
 ### Installation
 
@@ -89,26 +98,34 @@ SeekAI is a full-stack application designed to deliver AI-powered conversations 
    npm install
    ```
 
-   Create a `.env` file in the Backend directory:
+   Create a `.env` file in the `Backend` directory with the variables your code actually reads:
    ```env
-   PORT=3000
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
-   JWT_EXPIRE=7d
+   # Database
+   MONGOOSE_SERVER=your_mongodb_connection_string
 
-   # AI Model APIs
-   GOOGLE_API_KEY=your_google_genai_api_key
-   MISTRAL_API_KEY=your_mistral_api_key
+   # Auth
+   JWT_SECRET=your_jwt_secret
+
+   # AI Models
+   GOOGLE_GEMINI_API_KEY=your_gemini_api_key
+   MISTRALAI_API_KEY=your_mistral_api_key
+
+   # Web Search
    TAVILY_API_KEY=your_tavily_api_key
 
-   # Email Service
-   SMTP_SERVICE=your_email_service
-   SMTP_USER=your_email
-   SMTP_PASSWORD=your_email_password
+   # Vector store (RAG)
+   PINECONE_API_KEY=your_pinecone_api_key
 
-   # Client URL
-   CLIENT_URL=http://localhost:5173
+   # Gmail OAuth2 (used to send verification emails)
+   GOOGLE_USER=your_gmail_address
+   GOOGLE_CLIENT_ID=your_google_oauth_client_id
+   GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
+   GOOGLE_REFRESH_TOKEN=your_google_oauth_refresh_token
    ```
+
+   > Pinecone setup: create an index called `seekai` with 1024 dimensions (to match `mistral-embed`) before uploading any PDFs.
+   >
+   > Gmail OAuth2 setup: create OAuth2 credentials in Google Cloud Console for the Gmail API, then generate a refresh token for your sending account (e.g. via Google's OAuth2 Playground). This is required — the mail service will fail to start without valid credentials.
 
 3. **Frontend Setup**
    ```bash
@@ -116,10 +133,7 @@ SeekAI is a full-stack application designed to deliver AI-powered conversations 
    npm install
    ```
 
-   Create a `.env` file in the Frontend directory:
-   ```env
-   VITE_API_URL=http://localhost:3000
-   ```
+   The frontend currently talks to the backend at a hardcoded `http://localhost:3000` (see [Notes & Known Limitations](#notes--known-limitations)), so no `.env` file is required for local development out of the box.
 
 ### Running the Application
 
@@ -128,14 +142,14 @@ SeekAI is a full-stack application designed to deliver AI-powered conversations 
 cd Backend
 npm run dev
 ```
-The server will start on `http://localhost:3000`
+The server starts on `http://localhost:3000` (port is currently hardcoded).
 
 **Terminal 2 - Frontend**
 ```bash
 cd Frontend
 npm run dev
 ```
-The frontend will be available on `http://localhost:5173`
+The frontend will be available on `http://localhost:5173`.
 
 ## Project Structure
 
@@ -143,24 +157,27 @@ The frontend will be available on `http://localhost:5173`
 SeekAI/
 ├── Backend/
 │   ├── src/
-│   │   ├── config/          # Database and configuration
-│   │   ├── controllers/      # Route controllers
-│   │   ├── middleware/       # Custom middleware (auth, validation)
-│   │   ├── model/           # MongoDB schemas
-│   │   ├── routes/          # API route definitions
-│   │   ├── services/        # Business logic (AI, search, email)
-│   │   ├── sockets/         # WebSocket configuration
-│   │   ├── validator/       # Request validation schemas
-│   │   └── app.js           # Express app configuration
-│   ├── server.js            # Server entry point
+│   │   ├── config/          # MongoDB connection
+│   │   ├── controllers/      # auth + chat route handlers
+│   │   ├── middleware/       # cookie-based JWT auth guard
+│   │   ├── model/            # Mongoose schemas (User, Chat, Message)
+│   │   ├── routes/           # API route definitions
+│   │   ├── services/         # ai.service (agent), rag.service (Pinecone),
+│   │   │                     # internet.service (Tavily), mail.service (Gmail OAuth2)
+│   │   ├── sockets/          # Socket.IO server + streaming events
+│   │   ├── validator/        # express-validator chains for auth
+│   │   └── app.js            # Express app configuration
+│   ├── server.js             # Server entry point
 │   └── package.json
 │
 └── Frontend/
     ├── src/
-    │   ├── app/             # Main app component and routing
-    │   ├── feature/         # Feature modules (auth, chat)
-    │   ├── main.jsx         # React entry point
-    │   └── store/           # Redux store configuration
+    │   ├── app/              # App.jsx, router, Redux store
+    │   ├── feature/
+    │   │   ├── auth/          # login/register pages, auth slice, Protected route
+    │   │   └── chat/          # dashboard, chat slice, socket + REST chat services
+    │   ├── main.jsx           # React entry point
+    │   └── styles/            # global SCSS
     ├── index.html
     ├── vite.config.js
     └── package.json
@@ -169,117 +186,120 @@ SeekAI/
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/profile` - Get user profile (protected)
+- `POST /api/auth/register` — register a new user (`username`, `email`, `password`); sends a verification email
+- `POST /api/auth/login` — log in (only succeeds if the account's email is verified); sets a `token` cookie
+- `GET /api/auth/get-me` — get the current authenticated user (protected)
+- `GET /api/auth/verify-email?token=...` — verify the account via the link sent by email
+
+> There is currently no `/logout` endpoint; ending a session is left to the client (e.g. clearing the cookie).
 
 ### Chat
-- `GET /api/chat` - Get all chats (protected)
-- `POST /api/chat` - Create new chat (protected)
-- `GET /api/chat/:id` - Get chat details (protected)
-- `POST /api/chat/:id/message` - Send message (protected)
-- `DELETE /api/chat/:id` - Delete chat (protected)
+- `POST /api/chat/message` — send a message (`{ message, chatId }`); creates a new chat + title if `chatId` is omitted, responds immediately, then streams the AI's reply over Socket.IO and persists it once generation completes (protected)
+- `GET /api/chat/` — list all chats for the authenticated user (protected)
+- `GET /api/chat/:chatId/messages` — get message history for a chat (protected)
+- `DELETE /api/chat/delete/:chatId` — delete a chat and its messages (protected)
+- `POST /api/chat/upload` — upload a PDF (multipart field name `file`) to feed the RAG pipeline (protected)
 
 ### WebSocket Events
-- `connect` - Establish WebSocket connection
-- `send-message` - Send chat message
-- `receive-message` - Receive chat message
-- `disconnect` - Close connection
+- `joinChat` *(client → server)* — join the room for a given `chatId` to receive its streamed response
+- `aiResponseChunk` *(server → client)* — `{ chatId, text }`, one per streamed token/segment
+- `aiResponseComplete` *(server → client)* — `{ chatId, fullText }`, sent once generation finishes
+- `aiResponseError` *(server → client)* — `{ chatId, error }`, sent if generation fails
+- `disconnect` — standard Socket.IO disconnect
 
 ## Environment Variables
 
-### Backend
+### Backend (read by the current code)
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `PORT` | Server port | Yes |
-| `MONGODB_URI` | MongoDB connection string | Yes |
+| `MONGOOSE_SERVER` | MongoDB connection string | Yes |
 | `JWT_SECRET` | JWT signing secret | Yes |
-| `JWT_EXPIRE` | JWT expiration time | Yes |
-| `GOOGLE_API_KEY` | Google Genai API key | Yes |
-| `MISTRAL_API_KEY` | Mistral AI API key | Yes |
-| `TAVILY_API_KEY` | Tavily search API key | Yes |
-| `SMTP_SERVICE` | Email service provider | No |
-| `SMTP_USER` | Email account | No |
-| `SMTP_PASSWORD` | Email password | No |
-| `CLIENT_URL` | Frontend URL for CORS | Yes |
+| `GOOGLE_GEMINI_API_KEY` | Google Gemini API key (main agent model) | Yes |
+| `MISTRALAI_API_KEY` | Mistral API key (chat titles + embeddings) | Yes |
+| `TAVILY_API_KEY` | Tavily web search API key | Yes |
+| `PINECONE_API_KEY` | Pinecone API key (RAG vector store) | Yes |
+| `GOOGLE_USER` | Gmail address used to send verification emails | Yes |
+| `GOOGLE_CLIENT_ID` | Google OAuth2 client ID | Yes |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth2 client secret | Yes |
+| `GOOGLE_REFRESH_TOKEN` | Google OAuth2 refresh token | Yes |
 
 ### Frontend
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `VITE_API_URL` | Backend API URL | Yes |
+The frontend does not currently read any environment variables — API and Socket.IO base URLs are hardcoded to `http://localhost:3000`.
 
 ## Available Scripts
 
 ### Backend
 ```bash
-npm run dev    # Start development server with hot reload
+npm run dev    # Start development server with nodemon hot reload
 ```
 
 ### Frontend
 ```bash
-npm run dev    # Start Vite development server
-npm run build  # Build for production
-npm run lint   # Run ESLint
-npm run preview # Preview production build
+npm run dev      # Start Vite development server
+npm run build    # Build for production
+npm run lint     # Run ESLint
+npm run preview  # Preview production build
 ```
 
 ## Key Features Implementation
 
-### AI Integration
-- Uses LangChain for orchestrating AI models
-- Supports both Google Genai and Mistral AI
-- Dynamic model selection based on user preference
-- Context-aware conversation management
+### AI Agent
+- Built with LangChain's `createAgent`, configured with the Gemini model and two tools: `searchInternet` and `queryRAG`
+- The agent decides per-message whether a tool call is needed based on a system prompt instructing it to search the web for current info or query the RAG index for document-related questions
+- Responses are streamed via `agent.stream(..., { streamMode: "messages" })` and forwarded to the client over Socket.IO as they arrive
 
-### Web Search
-- Tavily integration for real-time internet search
-- Search results are synthesized into AI responses
-- Automatic fact verification through web search
+### RAG / Document Q&A
+- PDFs are parsed server-side with `pdf-parse`, split into ~100-character chunks (`RecursiveCharacterTextSplitter`), and embedded with Mistral's `mistral-embed` (1024 dimensions)
+- Chunks are upserted into a Pinecone index named `seekai`; queries embed the question and retrieve the top 5 most similar chunks
+- Note: chunk IDs are currently generated as `doc-0`, `doc-1`, ... per upload, so uploading a new PDF can overwrite vectors from a previous one rather than appending to them — worth keeping in mind if you need multiple documents to coexist in the index
 
 ### Real-time Chat
-- WebSocket connection for live messaging
-- Streaming responses from AI
-- Typing indicators and presence detection
+- Each chat has its own Socket.IO room (named after the chat's MongoDB `_id`)
+- The client joins that room and listens for `aiResponseChunk` / `aiResponseComplete` to render the streaming answer live
 
 ### User Management
-- Secure authentication with JWT tokens
-- Password hashing with bcrypt
-- Session management with secure cookies
-- Email verification support
+- JWT-based authentication with the token stored in a cookie (not an `Authorization` header)
+- Passwords hashed with bcrypt via a Mongoose `pre('save')` hook
+- Registration requires email verification before login is permitted
 
 ## Security Features
 
-- JWT-based authentication
-- CORS configuration
-- Password encryption with bcrypt
-- Request validation with Express Validator
-- Database query sanitization with Mongoose
-- Secure HTTP headers
-- Protected API routes with middleware
+- JWT-based authentication via cookies
+- Password hashing with bcrypt
+- Request validation with Express Validator (registration/login)
+- Mandatory email verification before login
+- Protected API routes via auth middleware
 
 ## Database Models
 
 ### User
-- Email (unique)
-- Password (hashed)
-- Full name
-- Avatar
-- Created at, Updated at
+- `username` (unique, 3–30 chars, alphanumeric/underscore)
+- `email` (unique)
+- `password` (hashed)
+- `verified` (boolean, default `false`)
+- `createdAt`, `updatedAt`
 
 ### Chat
-- User reference
-- Title
-- Messages array
-- Created at, Updated at
+- `user` (reference to User)
+- `title` (defaults to `"New Chat"`, generated automatically for new chats)
+- `createdAt`, `updatedAt`
 
 ### Message
-- Chat reference
-- User reference
-- Content
-- AI response
-- Search results (optional)
-- Timestamp
+- `chat` (reference to Chat)
+- `content` (string)
+- `role` (`"user"` or `"ai"`)
+- `createdAt`, `updatedAt`
+
+> Messages are stored in their own collection referencing the chat, rather than as an embedded array on the Chat document.
+
+## Notes & Known Limitations
+
+A few things worth knowing if you're picking this codebase up:
+
+- **Hardcoded URLs/ports**: the backend listens on port `3000` and CORS origins are set to `http://localhost:5173` directly in `app.js` / `server.socket.js`, and the frontend points at `http://localhost:3000` directly in its API/socket service files. None of these currently read from environment variables, so deploying beyond localhost means editing those files directly.
+- **No logout endpoint** exists yet on either the backend or frontend.
+- **`deleteChat` on the frontend currently issues a GET request** to the delete endpoint rather than a DELETE request — double-check this if chat deletion doesn't behave as expected.
+- **No LICENSE file** is currently present in the repository despite being referenced below.
 
 ## Contributing
 
@@ -293,7 +313,7 @@ Contributions are welcome! Please follow these steps:
 
 ## License
 
-This project is licensed under the ISC License - see the LICENSE file for details.
+This project is licensed under the ISC License (see `package.json`).
 
 ## Support
 
@@ -301,9 +321,14 @@ For support, please open an issue on the GitHub repository or contact the develo
 
 ## Roadmap
 
-- [ ] Streaming responses for better UX
+Recently shipped:
+- [x] Streaming responses for better UX
+- [x] PDF upload + RAG-grounded answers
+
+Planned:
+- [ ] Configurable backend port / CORS origin / frontend API base URL via environment variables
+- [ ] Logout endpoint
 - [ ] Multi-language support
-- [ ] Custom AI model training
 - [ ] Advanced analytics dashboard
 - [ ] Mobile app (React Native)
 - [ ] Collaborative chat features
@@ -312,13 +337,15 @@ For support, please open an issue on the GitHub repository or contact the develo
 
 ## Acknowledgments
 
-- [LangChain](https://js.langchain.com/) - AI orchestration
-- [Google Genai](https://ai.google.dev/) - Language model
-- [Mistral AI](https://mistral.ai/) - Language model
+- [LangChain](https://js.langchain.com/) - AI orchestration & agent tooling
+- [Google Gemini](https://ai.google.dev/) - Language model
+- [Mistral AI](https://mistral.ai/) - Language model & embeddings
 - [Tavily](https://tavily.com/) - Web search API
+- [Pinecone](https://www.pinecone.io/) - Vector database for RAG
 - [React](https://react.dev/) - Frontend framework
 - [Express.js](https://expressjs.com/) - Backend framework
 - [MongoDB](https://www.mongodb.com/) - Database
+- [Socket.IO](https://socket.io/) - Real-time streaming
 
 ---
 
