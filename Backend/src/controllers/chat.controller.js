@@ -2,7 +2,6 @@ import { generateResponse, generateChatTitle } from "../services/ai.service.js"
 import chatModel from '../model/chat.model.js'
 import messageModel from '../model/message.model.js'
 import {storeRAGData} from '../services/rag.service.js'
-import fs from 'fs'
 import {PDFParse} from 'pdf-parse'
 
 
