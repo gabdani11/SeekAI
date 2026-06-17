@@ -1,5 +1,5 @@
 import { initializeSocketConnection } from "../services/chat.socket";
-import { sendMessage, getChats, getMessages, deleteChat } from "../services/chat.api";
+import { sendMessage, getChats, getMessages, deleteChat, uploadFile } from "../services/chat.api";
 import {
     setChats,
     setCurrentChatId,
@@ -85,6 +85,9 @@ export const useChat = () => {
     function handleStreamComplete({ chatId, fullText }) {
         dispatch(finalizeAiMessage({ chatId, content: fullText }))
     }
+    function handleFileUpload({ file }) {
+        return uploadFile({file});
+    }
 
     return {
         initializeSocketConnection,
@@ -92,6 +95,7 @@ export const useChat = () => {
         handleGetChats,
         handleGetMessages,
         handleStreamChunk,
-        handleStreamComplete
+        handleStreamComplete,
+        handleFileUpload
     }
 }

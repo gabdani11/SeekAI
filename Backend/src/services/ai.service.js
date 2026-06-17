@@ -4,6 +4,7 @@ import {HumanMessage, SystemMessage, AIMessage, createAgent, tool} from 'langcha
 import getDataFromInternet from './internet.service.js'
 import * as z from 'zod'// Define a Zod schema for the tool input
 import {getIO} from '../sockets/server.socket.js'
+import {queryRAGData} from './rag.service.js'
 
 
 
@@ -27,11 +28,20 @@ const searchInternetTool = tool(
     }
 
 )
-
+const queryRAGTool = tool(
+    queryRAGData,
+    {
+        name:"queryRAG",
+        description:"use this tool to answer questions related to the pdf documents.",
+        schema: z.object({
+            query: z.string().describe("The query to search for in the RAG system.")
+        })
+    }
+)
 
 const agent = createAgent({
     model:model, 
-    tools:[searchInternetTool],
+    tools:[searchInternetTool, queryRAGTool],
  })
 
 
@@ -46,7 +56,8 @@ export async function generateResponse(message, chatId) {
                 messages: [
                     new SystemMessage(`
                         You are a helpful assistant that provides information and answers questions based on the user's message.
-                        If you need to search for information with latest updates on the internet to provide a better response, use the "searchInternet" tool.`),
+                        If you need to search for information with latest updates on the internet to provide a better response, use the "searchInternet" tool.
+                        if the question is related to the pdf documents, use the "queryRAG" tool.`),
                     ...message
                         .map(msg => {
                             if (msg.role === 'user') return new HumanMessage(msg.content)

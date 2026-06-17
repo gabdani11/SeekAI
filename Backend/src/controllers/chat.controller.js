@@ -1,6 +1,9 @@
 import { generateResponse, generateChatTitle } from "../services/ai.service.js"
 import chatModel from '../model/chat.model.js'
 import messageModel from '../model/message.model.js'
+import {storeRAGData} from '../services/rag.service.js'
+import fs from 'fs'
+import {PDFParse} from 'pdf-parse'
 
 
 export async function sendMessage(req, res) {
@@ -105,5 +108,41 @@ export async function deleteChat(req, res)
     res.status(200).json({
         message:"Chat deleted successfully"
     })
+
+}
+export async function uploadFile(req,res)
+{
+    const file = req.file
+    if(!file)
+    {
+        return res.status(400).json({
+            message:"No file uploaded"
+        })
+    }
+    try{
+    
+    const parse = new PDFParse({data:file.buffer})
+    const result = await parse.getText()
+    parse.destroy()
+    const response = await storeRAGData(result)
+    if(!response)
+    {
+        return res.status(500).json({
+            message:"Error occurred while uploading file"
+        })
+    }
+    res.status(200).json({
+        message:"File uploaded successfully",
+        result:"success"
+    })
+
+    
+    }catch(err)
+    {
+        console.error(err)
+    }
+    
+
+
 
 }

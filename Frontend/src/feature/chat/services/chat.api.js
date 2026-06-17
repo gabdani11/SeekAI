@@ -27,3 +27,13 @@ export const deleteChat = async (chatId)=>{
     const response = await api.get(`/api/chat/delete/${chatId}`)
     return response.data
 }
+export const uploadFile = async ({file}) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/api/chat/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return response.data;
+};
