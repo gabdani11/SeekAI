@@ -127,6 +127,74 @@
             padding-bottom: 96px; /* leave space for prompt */
             overflow-y: auto;
             flex: 1;
+            .uploadFileContainer{
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                gap:2rem;
+                position:absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 30%;
+                background-color:var(--secondary-color);
+                backdrop-filter: blur(1px);
+                z-index: 100;
+                padding: 1rem;
+                border-radius: 5px;
+                #closeBtn
+                {
+                    position:absolute;
+                    top:0.5rem;
+                    right:0.5rem;
+                    cursor:pointer;
+                    color:var(--primary-color);
+                }
+                h6{
+                    font-size:clamp(1rem, 2.5vw, 2rem);
+                    font-weight:400;
+                    color:var(--primary-color);
+                }
+                form
+                {
+                    display:flex;
+                    flex-direction:column;
+                    align-items:center;
+                    gap:0.5rem;
+                    label
+                    {
+                        cursor:pointer;
+                        display:flex;
+                        flex-direction:column;
+                        width: clamp(100px, 20vw, 200px);
+                        height: clamp(100px, 20vw, 200px);
+                        justify-content:center;
+                        align-items:center;
+                        background-color:color-mix(in srgb, var(--accent-color) 50%, transparent);
+                        border: 2px dashed var(--accent-color);
+                        color: var(--primary-color);
+                        
+                    }
+                    #inputFile
+                    {
+                        display:none;
+                    }
+                    #uploadBtn
+                    {
+                        padding:0.5rem 1rem;
+                        border-radius:999px;
+                        background-color:var(--primary-color);
+                        color:var(--accent-color);
+                        cursor:pointer;
+                        transition: all 0.2s ease;
+                    }
+                    #uploadBtn:active
+                    {
+                        scale:0.98;
+                    }
+                }
+            
+            }
 
             .empty {
                 display: flex;
@@ -178,6 +246,14 @@
             display: flex;
             border: 1px solid #ddd;
             align-items: center;
+            #uploadFileBtn{
+                color: var(--primary-color);
+                margin: 0 0.5rem;
+                cursor: pointer;
+
+
+            }
+        
 
             input {
                 width: 100%;

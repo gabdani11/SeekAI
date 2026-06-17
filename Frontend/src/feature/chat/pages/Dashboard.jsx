@@ -4,14 +4,21 @@ import { useChat } from '../hooks/useChat.js'
 import ReactMarkdown from "react-markdown";
 import './dashboard.scss'
 import { setCurrentChatId } from '../chat.slice.js';
-import { RiCustomerServiceLine, RiSettings3Line, RiSendPlaneFill, RiChatNewLine, RiArrowRightSLine, RiChatAi3Fill } from "@remixicon/react";
+import { RiCheckDoubleLine,RiFileTextFill,RiUpload2Line,RiCloseCircleLine,RiAddFill,RiCustomerServiceLine, RiSettings3Line, RiSendPlaneFill, RiChatNewLine, RiArrowRightSLine, RiChatAi3Fill } from "@remixicon/react";
 import { getSocket } from '../services/chat.socket.js';
+
+
 
 const Dashboard = () => {
   const dispatch = useDispatch();
   const chat = useChat()
   const [chatInput, setChatInput] = useState('')
   const [activeChatId, setActiveChatId] = useState(null);
+  const [uploadActive, setUploadActive] = useState(false);
+  const [file, setFile] = useState(null)
+  const [fileUploadResult, setFileUploadResult] = useState(null);
+ 
+
 
   const chats = useSelector(state => state.chat.chats)
   const user = useSelector(state => state.auth.user)
@@ -58,6 +65,27 @@ const Dashboard = () => {
   }
 
   const showEmptyState = (!currentChatId || chats[currentChatId]?.messages?.length === 0) && !streamingMessage
+  
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (!selected) return;
+    setFile(selected);
+  };
+  const clearFile = () => {
+    setFile(null);
+    
+  };
+  const handleFileSumit = async (e) => {
+    e.preventDefault();
+    if (!file) return;
+    const result = await chat.handleFileUpload({file})
+    if(result)
+    {
+      setFileUploadResult(result);
+    }
+
+
+  }
 
   return (
     <div className="dashboard">
@@ -109,6 +137,48 @@ const Dashboard = () => {
 
       <div className="chatContainer">
         <div className="messages" aria-live="polite">
+          {uploadActive && (
+  <div className='uploadFileContainer'>
+    <RiCloseCircleLine
+      id='closeBtn'
+      onClick={() => {
+        setUploadActive(!uploadActive);
+        clearFile();
+        setFileUploadResult(null);
+      }}
+    />
+
+    {fileUploadResult ? (
+      <div className='uploadResult'>
+        <h6>File Uploaded Successfully!</h6>
+        <RiCheckDoubleLine />
+      </div>
+    ) : (
+      <>
+        <h6>Upload PDF File</h6>
+        <form onSubmit={handleFileSumit}>
+          <label htmlFor="inputFile">
+            {!file ? (
+              <>
+                <RiUpload2Line id='uploadBtnLabel' />
+                <span>Drop your file here</span>
+              </>
+            ) : (
+              <RiFileTextFill id="uploadedIcon" />
+            )}
+          </label>
+          <input
+            type="file"
+            id='inputFile'
+            accept="application/pdf"
+            onChange={handleFileChange}
+          />
+          <button id='uploadBtn'>Upload</button>
+        </form>
+      </>
+    )}
+  </div>
+)}
           {showEmptyState ? (
             <div className="empty">
               <h4>What are you seeking today?</h4>
@@ -135,6 +205,7 @@ const Dashboard = () => {
         </div>
 
         <form className="promptContainer" onSubmit={handleSubmitMessage}>
+          <RiAddFill id='uploadFileBtn' onClick={()=>setUploadActive(!uploadActive)}/>
           <input
             placeholder="Type a message and press Enter"
             value={chatInput}
